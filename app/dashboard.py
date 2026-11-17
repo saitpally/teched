@@ -477,13 +477,16 @@ with st.container(key="card_table"):
         "Profile": t["material_profile"].map(profile_name), "Keyword": t["matched_keyword"],
         "MTCO2e": t[val_col], "Comments": t["Comments"],
     }).sort_values("Row")
+    # Bar scale for the MTCO2e column; NaN when the period has no weighted shipments.
+    bar_max = in_range[val_col].max()
+    bar_max = float(bar_max) if pd.notna(bar_max) and bar_max > 0 else 1.0
     st.dataframe(
         show, hide_index=True, width="stretch", height=380,
         column_config={
             "lbs": st.column_config.NumberColumn(format="localized"),
             "MTCO2e": st.column_config.ProgressColumn(
                 f"MTCO2e ({label(baseline).lower()}, {scenario})", format="%.2f",
-                min_value=0, max_value=float(in_range[val_col].max() or 1)),
+                min_value=0, max_value=bar_max),
         })
     st.download_button("Download this table (CSV)", show.to_csv(index=False),
                        "greenprints_shipments.csv", "text/csv")
