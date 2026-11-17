@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "greenprints"
+version = "0.1.0"
+description = "Project Greenprints: WARM-based GHG avoided estimates for Blueprints for Pangaea shipments"
+requires-python = ">=3.9"
+dependencies = ["pandas>=2.0", "pyyaml>=6.0", "openpyxl>=3.1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

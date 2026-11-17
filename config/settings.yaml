@@ -1,0 +1,67 @@
+# Project Greenprints - run settings. Edit these, not the Python code.
+
+# Input / output locations (relative to the greenprints/ folder).
+raw_file: data/raw/master_shipments.csv
+output_dir: data/processed
+
+# Shipments included in the analysis (inclusive at both ends, YYYY-MM-DD).
+# Dates in the sheet are month + year only; each is treated as the 1st of that month.
+date_range:
+  start: 2023-09-01
+  end: 2026-09-30
+
+# Academic year starts in this month (9 = September). AY "2023-24" = Sep 2023 - Aug 2024.
+academic_year_start_month: 9
+
+# B4P Estimates Calculator constants, used ONLY when a shipment has no recorded weight.
+estimation:
+  lbs_per_box: 39.4        # average lbs per box across all shipments with a box count
+  lbs_per_pallet: 489.14   # calculator output for one pallet (~12.42 boxes)
+
+# WARM scenario choice. Values must be practice keys from warm_factors.yaml.
+scenario:
+  alternative: source_reduction     # what B4P does: supplies are reused, so new ones aren't made
+  headline_baseline: landfilling    # what would have happened otherwise (headline number)
+  sensitivity_baselines: [combustion]   # also reported, not the headline
+
+lbs_per_short_ton: 2000
+
+# Freight emissions (trucking / ocean shipping) are NOT counted in this version.
+# Placeholder so a transport adjustment can be added later without restructuring.
+transport:
+  enabled: false
+
+# Data cleaning
+chapter_aliases:        # lower-case name -> standard name
+  umich: UMich
+valid_shipment_types: [Local, National, International]
+# Words that suggest a destination/recipient is in Michigan (case-insensitive regex).
+# Used ONLY to flag possibly inconsistent Shipment Type values for a human to check.
+michigan_patterns:
+  - "michigan"
+  - "\\bmi\\b"
+  - "ann arbor"
+  - "ypsilanti"
+  - "detroit"
+  - "flint"
+  - "lansing"
+  - "grand rapids"
+  - "dearborn"
+  - "pontiac"
+  - "kalamazoo"
+  - "saginaw"
+  - "jackson"
+  - "hamtramck"
+outlier_multiplier: 3   # flag shipments heavier than N x the median weight for their Shipment Type
+
+# Expected results for the current date range (from a manual count of the sheet).
+# The run prints a warning if the numbers drift by more than tolerance_pct.
+# Update or delete this block when you change date_range.
+sanity_check:
+  expected_rows: 46
+  expected_recorded_lbs: 83444
+  expected_recorded_lbs_by_type:
+    National: 42380
+    International: 38810
+    Local: 2255
+  tolerance_pct: 5

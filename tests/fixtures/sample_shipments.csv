@@ -1,0 +1,13 @@
+Chapters,Shipping Destination,Date of Shipment,Sponsor,Recipient Name,Transportation,Liability Covered,Insurance,Poundage of shipments (lbs),Estimated Shipment Valuation,Shipment Cost,Number of Boxes,Number of Pallets,Transport Size,HQ VPO,COO/CP,Shipment Type,Comments,Link to documentation of shipment
+Umich ,Ghana,Nov 2017,,Old Clinic,Ocean,,,"1,000.00",$500.00,,10,,,,,International,Misc. Medical Supplies,
+UMich,Lebanon ,August 2023,,Edge Clinic Before,Ocean,,,"2,000.00",,,,,,,,International,,
+UMich,"Ann Arbor, MI",September 2023,,Hope Clinic,Truck,,,"2,000.00",,,20,,,,,Local,gloves and masks,
+UMich,Lebanon ,May2024,,Beirut Hospital,Ocean,,,"7,140.00","$124,379.99",$900.00,"N/A, see notes",,,,,International,surgial kits,
+umich,Texas,Jan 2025,,Clinic Two,Truck,,,N/A,,,,4,,,,National,,
+UMich,Florida,June 2026,,FAJR,Truck,,,,,,,,,,,National,wheelchairs and walkers,
+UMich,"Detroit, Michigan",March 2026,,Detroit Free Clinic,Truck,,,500,,,,,,,,National,,
+UMich,Ohio,Sep 2026,,Edge Clinic End,Truck,,,0,,,5,,,,,National,adult diapers,
+UMich,Peru,October 2026,,After Range,Ocean,,,"3,000.00",,,,,,,,International,,
+UMich,Kenya,Sumtember 2024,,Bad Date Clinic,Ocean,,,100,,,,,,,,International,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,"264,896.00",,,,,,,,,,

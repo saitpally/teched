@@ -1,0 +1,8 @@
+pandas>=2.0,<3
+pyyaml>=6.0
+openpyxl>=3.1
+streamlit>=1.48
+plotly>=5.18
+pytest>=7.4
+# Installs this project itself so `python -m greenprints run` works from anywhere.
+-e .

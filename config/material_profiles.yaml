@@ -1,0 +1,71 @@
+# Material profiles: what a shipment is assumed to be made of, by weight.
+#
+# THESE ARE ASSUMPTIONS / PLACEHOLDERS until B4P weighs and sorts sample boxes.
+# Every material name must match a name in warm_factors.yaml exactly.
+# Every scenario's shares must add up to 1.0 (the tool refuses to run otherwise).
+#
+# Scenarios:
+#   central = best guess (used for headline numbers)
+#   low     = less cardboard/paper packaging, more plastic/metal  -> smaller benefit
+#   high    = more cardboard/paper packaging                      -> larger benefit
+# Only the paper/cardboard share moves between scenarios; the ratio between the
+# other materials stays fixed. Paper/cardboard has the largest WARM benefit under
+# both landfill and combustion baselines, so low < central < high holds for both.
+
+default_profile: mixed_medical_supplies
+
+profiles:
+  mixed_medical_supplies:
+    description: "Default for 'Misc. Medical Supplies' or rows with no detail"
+    central: {Mixed Plastics: 0.60, Corrugated Containers: 0.30, Mixed Metals: 0.10}
+    low:     {Mixed Plastics: 0.72, Corrugated Containers: 0.16, Mixed Metals: 0.12}
+    high:    {Mixed Plastics: 0.48, Corrugated Containers: 0.44, Mixed Metals: 0.08}
+
+  ppe:
+    description: "Gloves, masks, face shields, gowns"
+    central: {Mixed Plastics: 0.85, Corrugated Containers: 0.15}
+    low:     {Mixed Plastics: 0.95, Corrugated Containers: 0.05}
+    high:    {Mixed Plastics: 0.75, Corrugated Containers: 0.25}
+
+  surgical_supplies:
+    description: "Surgical supplies and kits"
+    central: {Mixed Plastics: 0.65, Corrugated Containers: 0.25, Mixed Metals: 0.10}
+    low:     {Mixed Plastics: 0.78, Corrugated Containers: 0.10, Mixed Metals: 0.12}
+    high:    {Mixed Plastics: 0.52, Corrugated Containers: 0.40, Mixed Metals: 0.08}
+
+  durable_medical_equipment:
+    description: "Wheelchairs, walkers, crutches, canes"
+    central: {Mixed Metals: 0.70,  Mixed Plastics: 0.20, Corrugated Containers: 0.10}
+    low:     {Mixed Metals: 0.735, Mixed Plastics: 0.21, Corrugated Containers: 0.055}
+    high:    {Mixed Metals: 0.63,  Mixed Plastics: 0.18, Corrugated Containers: 0.19}
+
+  medical_equipment:
+    description: "Blood pressure machines, microscopes, monitors"
+    central: {Mixed Metals: 0.50,  Mixed Plastics: 0.40, Corrugated Containers: 0.10}
+    low:     {Mixed Metals: 0.525, Mixed Plastics: 0.42, Corrugated Containers: 0.055}
+    high:    {Mixed Metals: 0.45,  Mixed Plastics: 0.36, Corrugated Containers: 0.19}
+
+  absorbent_and_textiles:
+    description: "Adult diapers, bed pads, blankets, hygiene kits (no exact WARM material: proxy)"
+    central: {Mixed Plastics: 0.40, Mixed Paper (general): 0.60}
+    low:     {Mixed Plastics: 0.55, Mixed Paper (general): 0.45}
+    high:    {Mixed Plastics: 0.25, Mixed Paper (general): 0.75}
+
+# Keyword rules: checked in order, first match wins. Matching is case-insensitive
+# and looks at the Comments, Recipient Name and Shipping Destination columns.
+# Patterns are regular expressions; "\\b" means "word boundary" so that e.g.
+# "cane" does not match "Hurricane".
+keyword_rules:
+  - profile: durable_medical_equipment
+    pattern: "wheelchair|walker|crutch|\\bcanes?\\b|\\bDME\\b|durable medical"
+  - profile: medical_equipment
+    pattern: "blood pressure|microscope|monitor|machine"
+  - profile: ppe
+    pattern: "glove|mask|face shield|N95|gown|\\bPPE\\b"
+  - profile: surgical_supplies
+    pattern: "surgical|surgial"        # "surgial" is a typo that appears in the sheet
+  - profile: absorbent_and_textiles
+    pattern: "diaper|bed pad|blanket|hygiene|washcloth"
+
+# Columns searched by the keyword rules, in this order.
+keyword_columns: [Comments, Recipient Name, Shipping Destination]
