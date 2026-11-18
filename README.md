@@ -156,3 +156,7 @@ data/raw/master_shipments.csv
    → report.py      Excel, CSV, data-quality report, METHODOLOGY.md
 ```
 See `METHODOLOGY.md` for the method and `ASSUMPTIONS.md` for every judgment call.
+
+## Also in this repo: Expired-Supply Outlet Finder
+
+[`outlet-finder/`](outlet-finder/) holds a separate static web app. It's a searchable directory of Southeast Michigan and Midwest training facilities and partner programs that can reuse expired medical supplies, with an outreach tracker. Open `outlet-finder/index.html`, or with GitHub Pages turned on, visit `https://saitpally.github.io/teched/outlet-finder/`. See [`outlet-finder/README.md`](outlet-finder/README.md).

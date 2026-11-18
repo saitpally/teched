@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expired-Supply Outlet Finder · Blueprints for Pangaea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wrap:#7FA7C9;      /* sterilization blue wrap */
+  --wrap-pale:#E6EEF4;
+  --tyvek:#FBFCFB;     /* peel-pouch white */
+  --ink:#16263D;       /* navy ink */
+  --ink-soft:#4A5A70;
+  --tape:#2F7A4E;      /* autoclave indicator, processed */
+  --tape-pale:#E3F0E7;
+  --amber:#A86A0C;     /* caution / ask first */
+  --amber-pale:#FBF0DC;
+  --rule:#C9D6E1;
+  --red:#9C2F2F;
+  --display:"Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  --body:"Public Sans", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--wrap-pale)}
+body{margin:0;font-family:var(--body);color:var(--ink);font-size:16px;line-height:1.5;background:var(--wrap-pale)}
+a{color:#1F5687}
+a:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+button,input,select,textarea{font:inherit;color:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- Header: the indicator-tape band is the one loud element ---------- */
+.tape{height:22px;background:
+  repeating-linear-gradient(-45deg,var(--ink) 0 10px,transparent 10px 26px),
+  var(--tape-pale);border-bottom:1px solid var(--ink)}
+header.top{background:var(--tyvek);border-bottom:1px solid var(--rule)}
+.top-inner{max-width:1240px;margin:0 auto;padding:28px 24px 0;display:grid;grid-template-columns:1fr auto;gap:12px 32px;align-items:end}
+.brand{font-size:.95rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:.95;margin:0;letter-spacing:-.01em}
+.lede{grid-column:1/-1;max-width:68ch;margin:6px 0 18px;color:var(--ink-soft)}
+.label-card{border:2px solid var(--ink);background:var(--tyvek);padding:10px 14px;font-family:var(--display);min-width:220px}
+.label-card dl{margin:0;display:grid;grid-template-columns:auto auto;gap:2px 14px}
+.label-card dt{font-weight:500;color:var(--ink-soft)}
+.label-card dd{margin:0;font-weight:700;text-align:right}
+nav.tabs{grid-column:1/-1;display:flex;gap:4px;margin-top:4px}
+nav.tabs button{border:1px solid var(--rule);border-bottom:none;background:var(--wrap-pale);padding:10px 18px;font-family:var(--display);font-weight:600;font-size:1.08rem;cursor:pointer;border-radius:6px 6px 0 0}
+nav.tabs button[aria-selected="true"]{background:var(--wrap-pale);border-color:var(--ink);border-bottom:1px solid var(--wrap-pale);margin-bottom:-1px;background:#fff}
+nav.tabs .count{display:inline-block;min-width:1.5em;margin-left:6px;padding:0 6px;border-radius:9px;background:var(--ink);color:#fff;font-size:.85rem}
+
+main{max-width:1240px;margin:0 auto;padding:24px}
+.panel[hidden]{display:none}
+
+/* ---------- Directory layout ---------- */
+.dir{display:grid;grid-template-columns:290px 1fr;gap:28px;align-items:start}
+aside.filters{position:sticky;top:12px;background:var(--tyvek);border:1px solid var(--rule);padding:18px;border-radius:4px}
+.filters h2{font-family:var(--display);font-size:1.25rem;margin:0 0 10px;display:inline}
+.filters summary{list-style:none;cursor:default;margin-bottom:10px}
+.filters summary::-webkit-details-marker{display:none}
+td:nth-child(5){white-space:nowrap}
+.field{margin-bottom:18px}
+.field > label, .field legend{display:block;font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+fieldset{border:0;margin:0 0 18px;padding:0}
+input[type=search],input[type=text],input[type=url],select,textarea{width:100%;padding:9px 10px;border:1px solid #9DB1C3;border-radius:4px;background:#fff}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.93rem;margin:4px 0;cursor:pointer}
+.check input{margin-top:4px;accent-color:var(--tape)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #9DB1C3;background:#fff;border-radius:14px;padding:3px 11px;font-size:.88rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.linkish{background:none;border:none;padding:0;color:#1F5687;text-decoration:underline;cursor:pointer;font-size:.9rem}
+
+.results-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.results-head p{margin:0;color:var(--ink-soft)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--ink-soft);margin:0 0 16px}
+.group-h{font-family:var(--display);font-size:1.45rem;font-weight:700;margin:26px 0 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.group-h small{font-family:var(--body);font-size:.9rem;font-weight:400;color:var(--ink-soft)}
+.group-h:first-of-type{margin-top:6px}
+
+/* Rows styled like a supply label: a distance stub, then the details */
+.org{display:grid;grid-template-columns:86px 1fr;background:var(--tyvek);border:1px solid var(--rule);border-left:4px solid var(--rule);margin-bottom:10px;border-radius:2px}
+.org.s-confirmed{border-left-color:var(--tape)}
+.org.s-training{border-left-color:var(--wrap)}
+.org.s-check{border-left-color:var(--amber)}
+.org.s-unexpired{border-left-color:#9AA6B4}
+.stub{border-right:1px dashed var(--rule);padding:14px 8px;text-align:center;font-family:var(--display)}
+.stub b{display:block;font-size:1.6rem;line-height:1}
+.stub span{font-size:.85rem;color:var(--ink-soft)}
+.org-body{padding:14px 18px 14px}
+.org h3{font-family:var(--display);font-weight:700;font-size:1.28rem;line-height:1.15;margin:0}
+.meta{color:var(--ink-soft);font-size:.92rem;margin:2px 0 8px}
+.why{margin:0 0 10px;max-width:75ch}
+.status{display:inline-block;font-size:.84rem;font-weight:600;padding:2px 9px;border-radius:3px;margin-right:6px}
+.st-confirmed{background:var(--tape-pale);color:var(--tape)}
+.st-training{background:#E3ECF5;color:#24527D}
+.st-check{background:var(--amber-pale);color:var(--amber)}
+.st-unexpired{background:#ECEFF2;color:#4E5966}
+.uses{display:inline;font-size:.88rem;color:var(--ink-soft)}
+.uses mark{background:none;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--tape);text-decoration-thickness:2px}
+.contact{font-size:.9rem;margin:8px 0 0}
+.org-actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--wrap-pale);font-size:.9rem}
+.org-actions select{width:auto;padding:4px 6px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;padding:7px 14px;border-radius:4px;cursor:pointer;font-weight:600;font-size:.92rem}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn:hover{filter:brightness(1.15)}
+.added-tag{font-size:.8rem;background:var(--amber-pale);color:var(--amber);padding:1px 7px;border-radius:3px;margin-left:6px;vertical-align:middle;font-family:var(--body);font-weight:600}
+.empty{background:var(--tyvek);border:1px dashed #9DB1C3;padding:28px;text-align:center}
+
+/* ---------- Discover ---------- */
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:start}
+.sheet{background:var(--tyvek);border:1px solid var(--rule);padding:22px;border-radius:4px}
+.sheet h2{font-family:var(--display);font-size:1.6rem;margin:0 0 4px}
+.sheet > p{margin:0 0 16px;color:var(--ink-soft);max-width:65ch}
+.step{display:grid;grid-template-columns:34px 1fr;gap:10px;margin-bottom:18px}
+.step-n{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.areas{display:flex;flex-direction:column;gap:14px}
+.area-tier h4{margin:0 0 6px;font-size:.95rem}
+.search-links{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.search-links a{display:block;padding:8px 10px;background:#fff;border:1px solid var(--rule);border-radius:3px;text-decoration:none;font-size:.92rem}
+.search-links a:hover{border-color:var(--ink)}
+.search-links a small{display:block;color:var(--ink-soft)}
+form.add .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+form.add .field{margin-bottom:12px}
+.note{font-size:.88rem;color:var(--ink-soft)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.toast.on{opacity:1}
+
+/* ---------- Tracker ---------- */
+table{width:100%;border-collapse:collapse;background:var(--tyvek);font-size:.93rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-size:1.02rem;background:#fff}
+td textarea{min-height:38px;font-size:.88rem}
+.tracker-tools{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+
+dialog{border:2px solid var(--ink);border-radius:4px;max-width:680px;width:92vw;padding:0}
+dialog::backdrop{background:rgba(22,38,61,.45)}
+.dlg-h{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--tape-pale);border-bottom:1px solid var(--rule)}
+.dlg-h h2{font-family:var(--display);margin:0;font-size:1.3rem}
+.dlg-b{padding:16px 18px}
+.dlg-b textarea{min-height:260px;font-size:.92rem;line-height:1.5}
+footer{max-width:1240px;margin:0 auto;padding:10px 24px 40px;color:var(--ink-soft);font-size:.86rem}
+
+@media (max-width:900px){
+  .dir,.two{grid-template-columns:1fr}
+  aside.filters{position:static}
+  .filters summary{cursor:pointer;margin-bottom:0}
+  .filters summary::after{content:"Show or hide";float:right;font-size:.88rem;color:#1F5687;text-decoration:underline;margin-top:4px}
+  .filters details[open] summary{margin-bottom:10px}
+  .top-inner{grid-template-columns:1fr}
+  .label-card{justify-self:start}
+}
+@media (max-width:560px){
+  .org{grid-template-columns:1fr}
+  .stub{border-right:none;border-bottom:1px dashed var(--rule);text-align:left;display:flex;gap:6px;align-items:baseline;padding:8px 14px}
+  .stub b{display:inline;font-size:1.2rem}
+  form.add .row{grid-template-columns:1fr}
+  nav.tabs button{padding:8px 10px;font-size:.98rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="tape" aria-hidden="true"></div>
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <p class="brand">For the Blueprints for Pangaea chapter at the University of Michigan</p>
+      <h1>Expired-supply outlet finder</h1>
+    </div>
+    <div class="label-card" aria-label="Directory summary">
+      <dl id="summary"></dl>
+    </div>
+    <p class="lede">Find training facilities and partner programs that can use supplies Michigan Medicine can no longer put into patient care. Results start in Southeast Michigan and widen to the Midwest. Every entry links to its sources, so confirm policies before you ship anything.</p>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" aria-selected="true" aria-controls="p-dir" id="t-dir">Directory</button>
+      <button role="tab" aria-selected="false" aria-controls="p-find" id="t-find">Find new organizations</button>
+      <button role="tab" aria-selected="false" aria-controls="p-track" id="t-track">Outreach tracker<span class="count" id="trackCount">0</span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ================= DIRECTORY ================= -->
+  <section class="panel" id="p-dir" role="tabpanel" aria-labelledby="t-dir">
+    <div class="dir">
+      <aside class="filters" aria-label="Filters"><details id="filtWrap" open><summary><h2>Narrow the list</h2></summary>
+        <div class="field">
+          <label for="q">Search</label>
+          <input type="search" id="q" placeholder="Name, city, program, contact…">
+        </div>
+        <div class="field">
+          <span id="haveLbl" style="display:block;font-weight:600;font-size:.92rem;margin-bottom:6px">Supplies you have</span>
+          <div class="chips" id="haveChips" role="group" aria-labelledby="haveLbl"></div>
+        </div>
+        <fieldset id="fExpired"><legend>Expired-supply policy</legend></fieldset>
+        <fieldset id="fKind"><legend>Type of organization</legend></fieldset>
+        <fieldset id="fRegion"><legend>Region</legend></fieldset>
+        <div class="field">
+          <label for="sort">Sort by</label>
+          <select id="sort">
+            <option value="best">Best match, Southeast Michigan first</option>
+            <option value="dist">Distance from Michigan Medicine</option>
+            <option value="name">Name</option>
+          </select>
+        </div>
+        <button class="linkish" id="reset">Clear all filters</button>
+      </details></aside>
+
+      <div>
+        <div class="results-head">
+          <p id="resultCount" aria-live="polite"></p>
+        </div>
+        <p class="legend">
+          <span><span class="status st-confirmed">Takes expired</span> source confirms it</span>
+          <span><span class="status st-training">Training use</span> expired is usually fine; ask</span>
+          <span><span class="status st-check">Ask first</span> policy not published</span>
+          <span><span class="status st-unexpired">Unexpired only</span> use for good-dated stock</span>
+        </p>
+        <div id="results"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIND NEW ================= -->
+  <section class="panel" id="p-find" role="tabpanel" aria-labelledby="t-find" hidden>
+    <div class="two">
+      <div class="sheet">
+        <h2>Search for more organizations</h2>
+        <p>Choose a type of program and the app builds web searches for each area, closest first. Open the ones you want, and add anything useful with the form on the right.</p>
+        <div class="step">
+          <div class="step-n">1</div>
+          <div>
+            <label for="qType" style="font-weight:600">What kind of program?</label>
+            <select id="qType"></select>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div>
+            <strong>Open a search for an area</strong>
+            <div class="areas" id="areas" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet">
+        <h2>Add an organization you found</h2>
+        <p>Organizations you add show up in the directory and tracker in this browser. Use "Export additions" to send them to whoever maintains the repo's <code>data.js</code>.</p>
+        <form class="add" id="addForm">
+          <div class="field"><label for="aName">Organization name</label><input type="text" id="aName" required></div>
+          <div class="row">
+            <div class="field"><label for="aCity">City, state</label><input type="text" id="aCity" required placeholder="Novi, MI"></div>
+            <div class="field"><label for="aRegion">Region</label><select id="aRegion"></select></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="aKind">Type</label><select id="aKind"></select></div>
+            <div class="field"><label for="aExp">Expired-supply policy</label><select id="aExp"></select></div>
+          </div>
+          <div class="field"><label for="aWhy">Why they're a fit</label><textarea id="aWhy" rows="2"></textarea></div>
+          <div class="field"><label for="aContact">Contact</label><input type="text" id="aContact" placeholder="Name, phone or email"></div>
+          <div class="field"><label for="aWeb">Website</label><input type="url" id="aWeb" placeholder="https://"></div>
+          <button class="btn" type="submit">Add to directory</button>
+        </form>
+        <hr style="border:none;border-top:1px solid var(--rule);margin:20px 0">
+        <div class="tracker-tools">
+          <button class="btn ghost" id="exportAdds">Export additions (JSON)</button>
+          <label class="btn ghost" style="display:inline-block">Import additions<input type="file" id="importAdds" accept="application/json" class="sr"></label>
+        </div>
+        <p class="note" id="addsNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TRACKER ================= -->
+  <section class="panel" id="p-track" role="tabpanel" aria-labelledby="t-track" hidden>
+    <div class="sheet">
+      <h2>Outreach tracker</h2>
+      <p>Set a status on any directory entry to add it here. Progress is saved in this browser. Export to CSV to share with the Partnership Outreach team.</p>
+      <div class="tracker-tools">
+        <button class="btn" id="exportCsv">Export CSV</button>
+      </div>
+      <div id="trackerTable"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="emailDlg" aria-labelledby="emailTitle">
+  <div class="dlg-h"><h2 id="emailTitle">Outreach email</h2><button class="btn ghost" id="closeDlg">Close</button></div>
+  <div class="dlg-b">
+    <label for="emailText" class="sr">Email draft</label>
+    <textarea id="emailText"></textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" id="copyEmail">Copy email</button>
+      <a class="btn ghost" id="mailtoEmail" href="#" style="text-decoration:none">Open in mail app</a>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+<footer>Directory researched November 2026. Distances are straight-line miles from Michigan Medicine in Ann Arbor. Before donating, confirm the recipient's policy and label expired items "Not for human or animal use" when they're for manikin-only training.</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+const ORIGIN = {lat:42.2837, lng:-83.7290}; // Michigan Medicine, Ann Arbor
+
+const CATEGORIES = {
+  syringes:"Syringes & needles", iv:"IV start kits & tubing", gloves:"Gloves", dressings:"Gauze & dressings",
+  catheters:"Catheters & drainage", airway:"Airway & respiratory", sutures:"Sutures & staplers",
+  surgical:"Surgical packs, drapes & instruments", equipment:"Durable equipment", lab:"Lab supplies"
+};
+const EXPIRED = {
+  confirmed:{label:"Takes expired", long:"Takes expired supplies (source confirms)"},
+  training:{label:"Training use", long:"Training use, ask first"},
+  check:{label:"Ask first", long:"Policy not published"},
+  unexpired:{label:"Unexpired only", long:"Unexpired only"}
+};
+const KINDS = {
+  training:"Training facility", partner:"Partner or redirect program", msro:"Surplus recovery org",
+  animal:"Animal & veterinary", network:"Network of training sites"
+};
+const REGIONS = {
+  semi:{label:"Southeast Michigan", note:"Priority area"},
+  mi:{label:"Rest of Michigan", note:"In-state"},
+  midwest:{label:"Midwest", note:"Ohio, Indiana, Illinois, Wisconsin, Minnesota, Missouri, Kansas"},
+  national:{label:"National & networks", note:"Ship anywhere or connect you to many sites"}
+};
+const REGION_ORDER = ["semi","mi","midwest","national"];
+const STATUSES = ["","To contact","Contacted","In conversation","Partner","Declined"];
+
+/* ---------- storage (best effort) ---------- */
+const KEY = "bfp-outlet-finder-v1";
+let store = {tracker:{}, added:[]};
+try{ const raw = localStorage.getItem(KEY); if(raw) store = Object.assign(store, JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
+
+function allOrgs(){ return window.ORGS.concat(store.added.map(o=>Object.assign({added:true}, o))); }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function miles(o){
+  if(o.lat==null||o.lng==null) return null;
+  const R=3958.8, toR=x=>x*Math.PI/180;
+  const dLat=toR(o.lat-ORIGIN.lat), dLng=toR(o.lng-ORIGIN.lng);
+  const a=Math.sin(dLat/2)**2+Math.cos(toR(ORIGIN.lat))*Math.cos(toR(o.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("on"),2200); }
+function today(){ return new Date().toLocaleDateString("en-CA"); }
+function host(u){ try{ return new URL(u).hostname.replace(/^www\./,""); }catch(e){ return "source"; } }
+
+/* ---------- filter state ---------- */
+const state = {
+  q:"", have:new Set(),
+  expired:new Set(Object.keys(EXPIRED)),
+  kind:new Set(Object.keys(KINDS)),
+  region:new Set(REGION_ORDER),
+  sort:"best"
+};
+
+function buildChecks(el, map, set, name){
+  Object.entries(map).forEach(([k,v])=>{
+    const lab = document.createElement("label"); lab.className="check";
+    const text = typeof v==="string"? v : (v.long||v.label);
+    lab.innerHTML = `<input type="checkbox" name="${name}" value="${k}" checked> <span>${esc(text)}</span>`;
+    lab.querySelector("input").addEventListener("change", e=>{ e.target.checked?set.add(k):set.delete(k); render(); });
+    el.appendChild(lab);
+  });
+}
+buildChecks($("#fExpired"), EXPIRED, state.expired, "exp");
+buildChecks($("#fKind"), KINDS, state.kind, "kind");
+buildChecks($("#fRegion"), Object.fromEntries(REGION_ORDER.map(r=>[r,REGIONS[r].label])), state.region, "reg");
+
+Object.entries(CATEGORIES).forEach(([k,v])=>{
+  const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=v; b.setAttribute("aria-pressed","false");
+  b.addEventListener("click",()=>{ const on=!state.have.has(k); on?state.have.add(k):state.have.delete(k); b.setAttribute("aria-pressed",on); render(); });
+  $("#haveChips").appendChild(b);
+});
+$("#q").addEventListener("input", e=>{ state.q=e.target.value.trim().toLowerCase(); render(); });
+$("#sort").addEventListener("change", e=>{ state.sort=e.target.value; render(); });
+$("#reset").addEventListener("click", ()=>{
+  state.q=""; $("#q").value="";
+  state.have.clear(); document.querySelectorAll("#haveChips .chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+  [["exp",state.expired,EXPIRED],["kind",state.kind,KINDS],["reg",state.region,REGIONS]].forEach(([n,set,map])=>{
+    Object.keys(map).forEach(k=>set.add(k));
+    document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=true);
+  });
+  render();
+});
+
+/* ---------- scoring ---------- */
+const W_REGION={semi:100,mi:60,midwest:40,national:20};
+const W_EXP={confirmed:30,training:22,check:8,unexpired:0};
+const W_KIND={training:10,partner:10,network:8,animal:6,msro:2};
+function matches(o){ return (o.useful||[]).filter(u=>state.have.has(u)); }
+function score(o){
+  const d=miles(o);
+  return (W_REGION[o.region]||0)+(W_EXP[o.expired]||0)+(W_KIND[o.kind]||0)+matches(o).length*6-(d==null?0:d/40);
+}
+
+function filtered(){
+  return allOrgs().filter(o=>{
+    if(!state.expired.has(o.expired)||!state.kind.has(o.kind)||!state.region.has(o.region)) return false;
+    if(state.have.size && !matches(o).length) return false;
+    if(state.q){
+      const hay=[o.name,o.sub,o.city,o.why,o.contact,KINDS[o.kind],REGIONS[o.region]&&REGIONS[o.region].label,(o.useful||[]).map(u=>CATEGORIES[u]).join(" ")].join(" ").toLowerCase();
+      if(!state.q.split(/\s+/).every(t=>hay.includes(t))) return false;
+    }
+    return true;
+  });
+}
+
+/* ---------- render directory ---------- */
+function orgRow(o){
+  const d=miles(o), m=new Set(matches(o));
+  const status = (store.tracker[o.id]||{}).status||"";
+  const uses=(o.useful||[]).map(u=>m.has(u)?`<mark>${esc(CATEGORIES[u])}</mark>`:esc(CATEGORIES[u])).join(", ");
+  const usesLabel = o.expired==="confirmed" ? "Takes" : "Likely uses";
+  const srcs=(o.sources||[]).map((s,i)=>`<a href="${esc(s)}" target="_blank" rel="noopener">Source ${i+1}<span class="sr"> (${esc(host(s))})</span></a>`).join(" ");
+  return `<article class="org s-${o.expired}" data-id="${esc(o.id)}">
+    <div class="stub">${d==null?`<b>—</b><span>remote</span>`:`<b>${d<1?"&lt;1":Math.round(d)}</b><span>${d<1.5?"mile":"miles"}</span>`}</div>
+    <div class="org-body">
+      <h3>${esc(o.name)}${o.added?'<span class="added-tag">Added by you</span>':''}</h3>
+      <p class="meta">${esc(o.sub||KINDS[o.kind])}, ${esc(o.city)}</p>
+      <p class="why">${esc(o.why||"")}</p>
+      <div><span class="status st-${o.expired}">${esc(EXPIRED[o.expired].label)}</span>${uses?`<span class="uses">${usesLabel}: ${uses}</span>`:""}</div>
+      ${o.contact?`<p class="contact"><strong>Contact:</strong> ${esc(o.contact)}</p>`:""}
+      <div class="org-actions">
+        <label>Outreach status
+          <select data-act="status">${STATUSES.map(s=>`<option value="${s}" ${s===status?"selected":""}>${s||"Not tracking"}</option>`).join("")}</select>
+        </label>
+        <button class="btn ghost" data-act="email" type="button">Draft email</button>
+        ${o.web?`<a href="${esc(o.web)}" target="_blank" rel="noopener">Website</a>`:""}
+        ${srcs}
+        ${o.added?`<button class="linkish" data-act="remove" type="button">Remove</button>`:""}
+      </div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const list=filtered();
+  list.forEach(o=>{o._s=score(o); o._d=miles(o);});
+  const out=$("#results");
+  $("#resultCount").textContent = `${list.length} organization${list.length===1?"":"s"}${state.have.size?" that can use what you selected":""}`;
+  if(!list.length){
+    out.innerHTML=`<div class="empty"><p><strong>No organizations match these filters.</strong></p><p>Clear a filter, or open <em>Find new organizations</em> to search your area.</p></div>`;
+    return;
+  }
+  if(state.sort==="best"){
+    let html="";
+    REGION_ORDER.forEach(r=>{
+      const g=list.filter(o=>o.region===r).sort((a,b)=>b._s-a._s);
+      if(!g.length) return;
+      html+=`<h2 class="group-h">${esc(REGIONS[r].label)} (${g.length}) <small>${esc(REGIONS[r].note)}</small></h2>`+g.map(orgRow).join("");
+    });
+    out.innerHTML=html;
+  }else{
+    const sorted = state.sort==="dist"
+      ? list.sort((a,b)=>(a._d==null?1e9:a._d)-(b._d==null?1e9:b._d))
+      : list.sort((a,b)=>a.name.localeCompare(b.name));
+    out.innerHTML=sorted.map(orgRow).join("");
+  }
+}
+
+$("#results").addEventListener("change", e=>{
+  if(e.target.dataset.act!=="status") return;
+  const id=e.target.closest(".org").dataset.id;
+  const v=e.target.value;
+  if(v){ store.tracker[id]=Object.assign(store.tracker[id]||{}, {status:v, updated:today()}); }
+  else { delete store.tracker[id]; }
+  save(); updateCounts(); toast(v?`Status set to ${v}`:"Removed from tracker");
+});
+$("#results").addEventListener("click", e=>{
+  const act=e.target.dataset.act; if(!act) return;
+  const id=e.target.closest(".org").dataset.id;
+  const o=allOrgs().find(x=>x.id===id);
+  if(act==="email") openEmail(o);
+  if(act==="remove"){ store.added=store.added.filter(x=>x.id!==id); delete store.tracker[id]; save(); render(); updateCounts(); toast("Removed"); }
+});
+
+/* ---------- email ---------- */
+function openEmail(o){
+  const picked = state.have.size ? [...state.have] : (o.useful||[]).slice(0,4);
+  const items = picked.map(u=>"  - "+CATEGORIES[u]).join("\n");
+  const isTraining = ["training","network","animal"].includes(o.kind);
+  const ask = o.expired==="unexpired"
+    ? "We also have supplies that are still within date. Would those be useful to you, and do you know of an outlet for items that are past date?"
+    : isTraining
+      ? "Would your program be able to use expired, unopened supplies for skills practice or simulation (manikin and task-trainer use only)? We can label everything \"Not for human or animal use.\""
+      : "Does your program accept expired or short-dated supplies, or could you point us to partners who do?";
+  const body =
+`Hello${o.contact && /^[A-Z][a-z]+ [A-Z]/.test(o.contact) ? " "+o.contact.split(/[;,(]/)[0].trim() : ""},
+
+I'm reaching out from Blueprints for Pangaea at the University of Michigan, a student-run organization that redistributes surplus medical supplies from Michigan Medicine so they get used instead of thrown away.
+
+We regularly have unopened supplies that hospitals can no longer use for patient care, including:
+${items}
+
+${ask}
+
+If this is a fit, we'd love to learn what you use most, roughly how much you could take, and whether pickup or drop-off works better for you.
+
+Thank you for your time,
+[Your name]
+Blueprints for Pangaea, University of Michigan
+[Your email]`;
+  const subject = `Unopened medical supplies for ${isTraining?"training use":"your program"} - Blueprints for Pangaea (U-M)`;
+  $("#emailTitle").textContent = `Outreach email: ${o.name}`;
+  $("#emailText").value = `Subject: ${subject}\n\n${body}`;
+  $("#mailtoEmail").href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $("#emailDlg").showModal();
+}
+$("#closeDlg").addEventListener("click", ()=>$("#emailDlg").close());
+$("#copyEmail").addEventListener("click", async ()=>{
+  const t=$("#emailText");
+  try{ await navigator.clipboard.writeText(t.value); }catch(e){ t.select(); try{document.execCommand("copy");}catch(_){} }
+  toast("Email copied");
+});
+
+/* ---------- discover ---------- */
+const QUERY_TYPES = [
+  {k:"nursing", label:"Nursing school simulation labs", q:"nursing program simulation lab"},
+  {k:"ems", label:"EMT & paramedic training programs", q:"EMT paramedic training program"},
+  {k:"medsim", label:"Medical school & hospital simulation centers", q:"medical simulation center"},
+  {k:"vettech", label:"Veterinary tech programs & vet schools", q:"veterinary technician program"},
+  {k:"allied", label:"Surgical tech, respiratory therapy & medical assisting", q:"surgical technology respiratory therapy program"},
+  {k:"hs", label:"High school health-science / CTE programs", q:"high school health science CTE program medical"},
+  {k:"shelter", label:"Animal shelters & low-cost vet clinics", q:"animal shelter low cost spay neuter clinic donate medical supplies"},
+  {k:"msro", label:"Surplus-recovery groups that take expired supplies", q:"donate expired medical supplies nonprofit"}
+];
+const AREAS = [
+  {tier:"Southeast Michigan, closest first", places:["Ann Arbor, MI","Ypsilanti, MI","Washtenaw County, MI","Livingston County, MI","Detroit, MI","Wayne County, MI","Oakland County, MI","Macomb County, MI","Monroe County, MI","Lenawee County, MI","Jackson, MI","St. Clair County, MI"]},
+  {tier:"Rest of Michigan", places:["Lansing, MI","Flint, MI","Grand Rapids, MI","Kalamazoo, MI","Saginaw, MI","Traverse City, MI"]},
+  {tier:"Midwest", places:["Toledo, OH","Cleveland, OH","Columbus, OH","Fort Wayne, IN","Indianapolis, IN","Chicago, IL","Milwaukee, WI","Minneapolis, MN","St. Louis, MO","Kansas City, MO","Des Moines, IA","Omaha, NE"]}
+];
+QUERY_TYPES.forEach(t=>{ const o=document.createElement("option"); o.value=t.k; o.textContent=t.label; $("#qType").appendChild(o); });
+function renderAreas(){
+  const t=QUERY_TYPES.find(x=>x.k===$("#qType").value);
+  $("#areas").innerHTML = AREAS.map(a=>`<div class="area-tier"><h4>${esc(a.tier)}</h4><ul class="search-links">${
+    a.places.map(p=>{
+      const query = `${t.q} ${p}`;
+      return `<li><a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" rel="noopener">${esc(p)}<small>${esc(t.label)}</small></a></li>`;
+    }).join("")}</ul></div>`).join("");
+}
+$("#qType").addEventListener("change", renderAreas);
+renderAreas();
+
+function fillSelect(sel, map){ Object.entries(map).forEach(([k,v])=>{ const o=document.createElement("option"); o.value=k; o.textContent=typeof v==="string"?v:(v.long||v.label); sel.appendChild(o); }); }
+fillSelect($("#aRegion"), Object.fromEntries(REGION_ORDER.map(r=>[r,REGIONS[r].label])));
+fillSelect($("#aKind"), KINDS);
+fillSelect($("#aExp"), {training:EXPIRED.training, check:EXPIRED.check, confirmed:EXPIRED.confirmed, unexpired:EXPIRED.unexpired});
+
+$("#addForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const name=$("#aName").value.trim(); if(!name) return;
+  const o={
+    id:"user-"+Date.now(), name, city:$("#aCity").value.trim(), region:$("#aRegion").value, kind:$("#aKind").value,
+    sub:KINDS[$("#aKind").value], expired:$("#aExp").value, why:$("#aWhy").value.trim(), contact:$("#aContact").value.trim(),
+    web:$("#aWeb").value.trim(), useful:[], sources:$("#aWeb").value.trim()?[$("#aWeb").value.trim()]:[], lat:null, lng:null
+  };
+  store.added.push(o); save(); e.target.reset(); render(); updateCounts();
+  toast(`Added ${name}`);
+});
+$("#exportAdds").addEventListener("click", ()=>{
+  if(!store.added.length){ toast("You haven't added any organizations yet"); return; }
+  download("bfp-added-organizations.json", JSON.stringify(store.added,null,2), "application/json");
+});
+$("#importAdds").addEventListener("change", e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{
+    const arr=JSON.parse(t); if(!Array.isArray(arr)) throw new Error("Expected a list");
+    const ids=new Set(store.added.map(x=>x.id)); let n=0;
+    arr.forEach(x=>{ if(x&&x.name&&!ids.has(x.id)){ store.added.push(x); n++; } });
+    save(); render(); updateCounts(); toast(`Imported ${n} organization${n===1?"":"s"}`);
+  }).catch(()=>toast("That file isn't an export from this app"));
+  e.target.value="";
+});
+
+/* ---------- tracker ---------- */
+function renderTracker(){
+  const rows=allOrgs().filter(o=>store.tracker[o.id]);
+  if(!rows.length){
+    $("#trackerTable").innerHTML=`<div class="empty"><p><strong>Nothing tracked yet.</strong></p><p>In the directory, set an outreach status on any organization to follow it here.</p></div>`;
+    return;
+  }
+  rows.sort((a,b)=>STATUSES.indexOf(store.tracker[a.id].status)-STATUSES.indexOf(store.tracker[b.id].status));
+  $("#trackerTable").innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Organization</th><th>Region</th><th>Policy</th><th>Status</th><th>Updated</th><th>Notes</th></tr></thead><tbody>${
+    rows.map(o=>{const t=store.tracker[o.id]; return `<tr data-id="${esc(o.id)}">
+      <td><strong>${esc(o.name)}</strong><br><span class="note">${esc(o.contact||o.city)}</span></td>
+      <td>${esc(REGIONS[o.region].label)}</td>
+      <td><span class="status st-${o.expired}">${esc(EXPIRED[o.expired].label)}</span></td>
+      <td><select data-t="status" aria-label="Status for ${esc(o.name)}">${STATUSES.map(s=>`<option value="${s}" ${s===t.status?"selected":""}>${s||"Stop tracking"}</option>`).join("")}</select></td>
+      <td>${esc(t.updated||"")}</td>
+      <td><textarea data-t="notes" aria-label="Notes for ${esc(o.name)}" placeholder="Who you spoke with, what they need…">${esc(t.notes||"")}</textarea></td>
+    </tr>`;}).join("")}</tbody></table></div>`;
+}
+$("#trackerTable").addEventListener("change", e=>{
+  const tr=e.target.closest("tr"); if(!tr) return; const id=tr.dataset.id;
+  if(e.target.dataset.t==="status"){
+    if(!e.target.value){ delete store.tracker[id]; } else { store.tracker[id].status=e.target.value; store.tracker[id].updated=today(); }
+    save(); renderTracker(); render(); updateCounts();
+  }
+});
+$("#trackerTable").addEventListener("input", e=>{
+  if(e.target.dataset.t!=="notes") return;
+  const id=e.target.closest("tr").dataset.id; store.tracker[id].notes=e.target.value; save();
+});
+$("#exportCsv").addEventListener("click", ()=>{
+  const rows=allOrgs().filter(o=>store.tracker[o.id]);
+  if(!rows.length){ toast("Track at least one organization first"); return; }
+  const q=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const head=["Organization","City","Region","Type","Expired policy","Status","Updated","Contact","Website","Notes"];
+  const lines=[head.map(q).join(",")].concat(rows.map(o=>{const t=store.tracker[o.id];
+    return [o.name,o.city,REGIONS[o.region].label,KINDS[o.kind],EXPIRED[o.expired].long,t.status,t.updated,o.contact,o.web,t.notes].map(q).join(",");}));
+  download("bfp-outreach-tracker.csv", lines.join("\n"), "text/csv");
+});
+
+let dlNs; // Claude artifact viewer's downloads capability, when the page runs there
+if(window.claude && typeof window.claude.use==="function"){ window.claude.use("downloads").then(ns=>{dlNs=ns;}).catch(()=>{}); }
+async function download(name, text, type){
+  if(dlNs){
+    try{ await dlNs.save({filename:name, data:text}); toast(`Saved ${name}`); return; }catch(e){ /* declined or failed: fall through */ }
+  }
+  try{
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+  }catch(e){}
+  // Some viewers block downloads, so also put the data on the clipboard
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>toast(`Saved ${name} and copied it to your clipboard`)).catch(()=>toast(`Saved ${name}`));
+  }else{ toast(`Saved ${name}`); }
+}
+
+/* ---------- tabs & summary ---------- */
+const tabs=[["t-dir","p-dir"],["t-find","p-find"],["t-track","p-track"]];
+tabs.forEach(([t,p])=>$("#"+t).addEventListener("click",()=>{
+  tabs.forEach(([t2,p2])=>{ $("#"+t2).setAttribute("aria-selected", t2===t); $("#"+p2).hidden = p2!==p; });
+  if(p==="p-track") renderTracker();
+}));
+function updateCounts(){
+  const all=allOrgs();
+  $("#trackCount").textContent=Object.keys(store.tracker).length;
+  $("#summary").innerHTML=
+    `<dt>In Southeast Michigan</dt><dd>${all.filter(o=>o.region==="semi").length}</dd>`+
+    `<dt>Take expired or training use</dt><dd>${all.filter(o=>o.expired==="confirmed"||o.expired==="training").length}</dd>`+
+    `<dt>Total organizations</dt><dd>${all.length}</dd>`;
+  $("#addsNote").textContent = store.added.length ? `You've added ${store.added.length} organization${store.added.length===1?"":"s"} in this browser.` : "";
+}
+updateCounts();
+render();
+if(window.matchMedia("(max-width:900px)").matches) $("#filtWrap").open=false;
+// Keep the summary from toggling on desktop, where filters stay open
+$("#filtWrap summary").addEventListener("click", e=>{ if(!window.matchMedia("(max-width:900px)").matches) e.preventDefault(); });
+})();
+</script>
+</body>
+</html>
